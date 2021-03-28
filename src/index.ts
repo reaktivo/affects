@@ -1,16 +1,19 @@
-import { mergeMaps } from './util';
 import { AsyncLocalStorage } from 'async_hooks';
+import { mergeMaps } from './util';
 
 const asyncLocalStorage = new AsyncLocalStorage();
+const contextSymbol = Symbol('affects-context');
 
-type ContextBox = { value: unknown };
-type ContextType<T extends ContextBox> = T["value"];
-type RunnerCallback = (...args:any[]) => void;
+type ContextBox<T = unknown> = { [contextSymbol]: true, defaultValue: T };
+type ContextType<T extends ContextBox> = T["defaultValue"];
+type RunnerCallback<T> = (...args:any[]) => T;
+type ContextTuple<T> = [ContextBox<T>, ContextType<ContextBox<T>>];
 
-export function createContext<T>(value: T) {
+export function createContext<T>(defaultValue: T) {
   return {
-    value
-  }
+    [contextSymbol]: true,
+    defaultValue,
+  } as const;
 }
 
 export function perform<T extends ContextBox>(Context: T): ContextType<T> {
@@ -21,14 +24,24 @@ export function perform<T extends ContextBox>(Context: T): ContextType<T> {
   }
 
   if (!map.has(Context)) {
-    throw new Error(`Missing context definition for ${Context}`);
+    return Context["defaultValue"];
   }
 
   return map.get(Context);
 }
 
-export function createRunner(...pairs: Array<[ContextBox, ContextType<ContextBox>]>) {
-  return function(callback: RunnerCallback) {
+export function createRunner<T>(...pairs: Array<ContextTuple<T>>) {
+  pairs.forEach(([Context]) => {
+    if (!Context) {
+      throw new Error('Missing Context in pair');
+    }
+    
+    if(!Context[contextSymbol]) {
+      throw new Error('Context needs to be created by `createContext`');
+    }
+  });
+
+  return function<T>(callback: RunnerCallback<T>): T {
     const parentMap = asyncLocalStorage.getStore();
     const map = new Map(pairs);
     const mergedMap = mergeMaps(parentMap, map);
