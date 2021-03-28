@@ -76,17 +76,16 @@ describe('Runner', () => {
 
   it('throws if pair is custom object', () => {
     // @ts-expect-error
-    const fn = () => createRunner([{ defaultValue: 'xyz'}]);
-    expect(fn).toThrowErrorMatchingInlineSnapshot();
+    const fn = () => createRunner([{ defaultValue: 'xyz' }]);
+    expect(fn).toThrowErrorMatchingInlineSnapshot(
+      `"Context needs to be created by \`createContext\`"`
+    );
   });
 });
 
 describe('Perform', () => {
-  it('throws if `perform` is called outside context of runner', () => {
-    const Age = createContext(0);
-    const fn = () => perform(Age);
-    expect(fn).toThrowErrorMatchingInlineSnapshot(
-      `"perform must be called from within a runner"`
-    );
+  it('should return default context value when run outside runner', () => {
+    const Age = createContext(34);
+    expect(perform(Age)).toBe(34);
   });
 });

@@ -19,11 +19,7 @@ export function createContext<T>(defaultValue: T) {
 export function perform<T extends ContextBox>(Context: T): ContextType<T> {
   const map = asyncLocalStorage.getStore();
 
-  if (!(map instanceof Map)) {
-    throw new Error('perform must be called from within a runner');
-  }
-
-  if (!map.has(Context)) {
+  if (!(map instanceof Map) || !map.has(Context)) {
     return Context["defaultValue"];
   }
 
