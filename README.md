@@ -125,13 +125,15 @@ run([Handler, customValue], [AnotherHandler, anotherCustomValue]);
 
 ### `perform`
 
-Perform will pull in the matching value for a handler, in a similar way to [React's `useContext`](https://reactjs.org/docs/hooks-reference.html#usecontext). Note that unlike `useContext`, `perform` will work across asynchronous work boundaries.
+Perform will pull in the matching value for a handler, in a similar way to [React's `useContext`](https://reactjs.org/docs/hooks-reference.html#usecontext). Note that unlike `useContext`, `perform` will work across asynchronous work boundaries. Another important feature of `perform` is that it's fully typed and will use the type of your defaultValue as the type that it returns.
 
 ```js
 const user = perform(User);
 ```
 
+## Typescript
 
+Affects is fully typed, meaning that `perform`ed values will return the correct types.
 
 ## Installation
 
