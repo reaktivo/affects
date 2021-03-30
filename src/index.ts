@@ -4,10 +4,10 @@ import { mergeMaps } from './util';
 const asyncLocalStorage = new AsyncLocalStorage();
 const contextSymbol = Symbol('affects-context');
 
-type ContextBox<T = unknown> = { [contextSymbol]: true; defaultValue: T };
-type ContextType<T extends ContextBox> = T['defaultValue'];
+type HandlerBox<T = unknown> = { [contextSymbol]: true; defaultValue: T };
+type HandlerTypeValueType<T extends HandlerBox> = T['defaultValue'];
 type RunnerCallback<T> = (...args: any[]) => T;
-type ContextTuple<T> = [ContextBox<T>, ContextType<ContextBox<T>>];
+type HandlerTuple<T> = [HandlerBox<T>, HandlerTypeValueType<HandlerBox<T>>];
 
 export function createContext<T>(defaultValue: T) {
   return {
@@ -16,7 +16,7 @@ export function createContext<T>(defaultValue: T) {
   } as const;
 }
 
-export function perform<T extends ContextBox>(Context: T): ContextType<T> {
+export function perform<T extends HandlerBox>(Context: T): HandlerTypeValueType<T> {
   const map = asyncLocalStorage.getStore();
 
   if (!(map instanceof Map) || !map.has(Context)) {
@@ -26,18 +26,18 @@ export function perform<T extends ContextBox>(Context: T): ContextType<T> {
   return map.get(Context);
 }
 
-export function createRunner<T>(...pairs: Array<ContextTuple<T>>) {
-  pairs.forEach(([Context]) => {
-    if (!Context) {
-      throw new Error('Missing Context in pair');
-    }
+export function createRunner<T>(callback: RunnerCallback<T>) {
+  return function runWithHandlers<HandlerType>(...pairs: Array<HandlerTuple<HandlerType>>): T {
+    pairs.forEach(([Context]) => {
+      if (!Context) {
+        throw new Error('Missing Context in pair');
+      }
+  
+      if (!Context[contextSymbol]) {
+        throw new Error('Context needs to be created by `createContext`');
+      }
+    });
 
-    if (!Context[contextSymbol]) {
-      throw new Error('Context needs to be created by `createContext`');
-    }
-  });
-
-  return function<T>(callback: RunnerCallback<T>): T {
     const parentMap = asyncLocalStorage.getStore();
     const map = new Map(pairs);
     const mergedMap = mergeMaps(parentMap, map);
