@@ -16,7 +16,9 @@ export function createContext<T>(defaultValue: T) {
   } as const;
 }
 
-export function perform<T extends HandlerBox>(Context: T): HandlerTypeValueType<T> {
+export function perform<T extends HandlerBox>(
+  Context: T
+): HandlerTypeValueType<T> {
   const map = asyncLocalStorage.getStore();
 
   if (!(map instanceof Map) || !map.has(Context)) {
@@ -27,12 +29,14 @@ export function perform<T extends HandlerBox>(Context: T): HandlerTypeValueType<
 }
 
 export function createRunner<T>(callback: RunnerCallback<T>) {
-  return function runWithHandlers<HandlerType>(...pairs: Array<HandlerTuple<HandlerType>>): T {
+  return function runWithHandlers<HandlerType>(
+    ...pairs: Array<HandlerTuple<HandlerType>>
+  ): T {
     pairs.forEach(([Context]) => {
       if (!Context) {
         throw new Error('Missing Context in pair');
       }
-  
+
       if (!Context[contextSymbol]) {
         throw new Error('Context needs to be created by `createContext`');
       }

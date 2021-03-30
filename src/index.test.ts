@@ -29,7 +29,9 @@ describe('Runner', () => {
     const Name = createContext('Alejandro');
 
     const outerRun = createRunner(() => innerRun([Name, 'Marcel']));
-    const innerRun = createRunner(() => `${perform(Name)} is ${perform(Age)} years old`);
+    const innerRun = createRunner(
+      () => `${perform(Name)} is ${perform(Age)} years old`
+    );
 
     const result = outerRun([Age, 34]);
 
