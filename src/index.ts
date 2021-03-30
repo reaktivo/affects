@@ -2,42 +2,46 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { mergeMaps } from './util';
 
 const asyncLocalStorage = new AsyncLocalStorage();
-const contextSymbol = Symbol('affects-context');
+const handlerSymbol = Symbol('affects-handler');
 
-type ContextBox<T = unknown> = { [contextSymbol]: true; defaultValue: T };
-type ContextType<T extends ContextBox> = T['defaultValue'];
+type HandlerBox<T = unknown> = { [handlerSymbol]: true; defaultValue: T };
+type HandlerTypeValueType<T extends HandlerBox> = T['defaultValue'];
 type RunnerCallback<T> = (...args: any[]) => T;
-type ContextTuple<T> = [ContextBox<T>, ContextType<ContextBox<T>>];
+type HandlerTuple<T> = [HandlerBox<T>, HandlerTypeValueType<HandlerBox<T>>];
 
-export function createContext<T>(defaultValue: T) {
+export function createHandler<T>(defaultValue: T) {
   return {
-    [contextSymbol]: true,
+    [handlerSymbol]: true,
     defaultValue,
   } as const;
 }
 
-export function perform<T extends ContextBox>(Context: T): ContextType<T> {
+export function perform<T extends HandlerBox>(
+  Handler: T
+): HandlerTypeValueType<T> {
   const map = asyncLocalStorage.getStore();
 
-  if (!(map instanceof Map) || !map.has(Context)) {
-    return Context['defaultValue'];
+  if (!(map instanceof Map) || !map.has(Handler)) {
+    return Handler['defaultValue'];
   }
 
-  return map.get(Context);
+  return map.get(Handler);
 }
 
-export function createRunner<T>(...pairs: Array<ContextTuple<T>>) {
-  pairs.forEach(([Context]) => {
-    if (!Context) {
-      throw new Error('Missing Context in pair');
-    }
+export function createRunner<T>(callback: RunnerCallback<T>) {
+  return function runWithHandlers<HandlerType>(
+    ...pairs: Array<HandlerTuple<HandlerType>>
+  ): T {
+    pairs.forEach(([Handler]) => {
+      if (!Handler) {
+        throw new Error('Missing Handler in pair');
+      }
 
-    if (!Context[contextSymbol]) {
-      throw new Error('Context needs to be created by `createContext`');
-    }
-  });
+      if (!Handler[handlerSymbol]) {
+        throw new Error('Handler needs to be created by `createHandler`');
+      }
+    });
 
-  return function<T>(callback: RunnerCallback<T>): T {
     const parentMap = asyncLocalStorage.getStore();
     const map = new Map(pairs);
     const mergedMap = mergeMaps(parentMap, map);
