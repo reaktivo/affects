@@ -14,6 +14,8 @@ Affects is a Algebraic Effects inspired library. If you're coming from the React
 
 Affects provides user friendly thread-local storage to Node.js.
 
+> :warning: Affects only works on Node.js > 14, since it relies on [Node's Experimental AsyncLocalStorage](https://nodejs.org/api/async_hooks.html#async_hooks_class_asynclocalstorage)
+
 ## Examples
 
 ```js
