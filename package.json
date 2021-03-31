@@ -1,6 +1,7 @@
 {
   "version": "1.0.1",
   "license": "MIT",
+  "repository": "github:reaktivo/affects",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
